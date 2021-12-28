@@ -56,6 +56,8 @@ module Genova
       end
 
       def update
+        FileUtils.rm_rf(@repos_path)
+
         git = client
 
         @logger.info("Git checkout: #{@branch}")
@@ -166,7 +168,7 @@ module Genova
         uri = Genova::Github::Client.new(@repository).build_clone_uri
         @logger.info("Git clone: #{uri}")
 
-        ::Git.clone(uri, '', path: @repos_path)
+        ::Git.clone(uri, '', path: @repos_path, recursive: true)
       end
 
       def client

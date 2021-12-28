@@ -20,7 +20,7 @@ module Genova
               task_definition: task_definition_arn
             }
 
-            params.merge(options.slice(:desired_count, :force_new_deployment, :health_check_grace_period_seconds))
+            params.merge!(options.slice(:desired_count, :force_new_deployment, :health_check_grace_period_seconds, :enable_execute_command))
 
             deployment_config = options.slice(:minimum_healthy_percent, :maximum_percent)
             params[:deployment_configuration] = deployment_config if deployment_config.count.positive?
