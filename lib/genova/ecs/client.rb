@@ -75,7 +75,8 @@ module Genova
           :force_new_deployment,
           :health_check_grace_period_seconds,
           :minimum_healthy_percent,
-          :maximum_percent
+          :maximum_percent,
+          :enable_execute_command
         )
 
         task_arns = service_client.update(service, task_definition_arn, params)
