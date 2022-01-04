@@ -98,6 +98,28 @@ module Genova
         deploy_response
       end
 
+      def register_service(service)
+        service_config = @deploy_config.find_service(@cluster, service)
+        task_definition_config = @code_manager.load_task_definition_config(Pathname('config').join(service_config[:path]))
+
+        params = service_config.slice(
+          :force_new_deployment,
+          :health_check_grace_period_seconds,
+          :minimum_healthy_percent,
+          :maximum_percent,
+          :enable_execute_command,
+          :load_balancers,
+          :launch_type,
+          :network_configuration
+        )
+        params.merge!(task_definition_config: task_definition_config.family)
+
+        service_client = Deployer::Service::Client.new(@cluster, logger: @logger)
+        raise Exceptions::ValidationError, "Service is already registered. [#{service}]" if service_client.exist?(service)
+
+        service_client.register(service, params)
+      end
+
       def deploy_scheduled_task(rule, target, id)
         target_config = @deploy_config.find_scheduled_task_target(@cluster, rule, target)
 

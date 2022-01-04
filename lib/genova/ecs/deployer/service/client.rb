@@ -33,6 +33,14 @@ module Genova
             wait(service, result.service.task_definition)
           end
 
+          def register(service, options = {})
+            params = options.merge(cluster: @cluster, service_name: service, desired_count: 0)
+            result = @ecs.create_service(params)
+
+            @logger.info('Service has been created.')
+            @logger.info(JSON.pretty_generate(result.to_h))
+          end
+
           def exist?(service)
             status = nil
             result = @ecs.describe_services(
