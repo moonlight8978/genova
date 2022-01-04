@@ -186,7 +186,7 @@ module GenovaCli
       code_manager.update
 
       code_manager.load_deploy_config
-      Genova::Ecs::Service::Client.new(options[:cluster]).register(options[:service])
+      Genova::Ecs::Client.new(options[:cluster], code_manager).register_service(options[:service])
     end
 
     desc 'clear-transaction', 'Cancel deploy transactions.'
