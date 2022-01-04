@@ -112,7 +112,7 @@ module Genova
           :launch_type,
           :network_configuration
         )
-        params.merge!(task_definition_config: task_definition_config[:family])
+        params.merge!(task_definition: task_definition_config[:family])
 
         service_client = Deployer::Service::Client.new(@cluster, logger: @logger)
         raise Exceptions::ValidationError, "Service is already registered. [#{service}]" if service_client.exist?(service)
