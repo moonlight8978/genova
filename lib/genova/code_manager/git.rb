@@ -75,7 +75,7 @@ module Genova
         end
 
         git.fetch
-        git.clean(ff: true, d: true)
+        git.clean(ff: true, d: true, force: true)
         git.checkout(checkout)
         git.reset_hard(reset_hard)
         git.update_submodules
