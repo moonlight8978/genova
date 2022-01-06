@@ -28,7 +28,7 @@ module Git
     end
 
     def update_submodules
-      command(["-C", @git_work_dir], "submodule", "update")
+      command("-C #{@git_work_dir}", "submodule", "update")
     end
   end
 
