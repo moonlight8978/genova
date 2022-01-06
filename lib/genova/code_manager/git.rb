@@ -31,6 +31,12 @@ module Git
       command("submodule", "update")
     end
   end
+
+  class Base
+    def update_submodules
+      lib.update_submodules
+    end
+  end
 end
 
 module Genova
