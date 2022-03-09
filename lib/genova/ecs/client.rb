@@ -26,7 +26,8 @@ module Genova
           command = override_command.split(' ')
 
           if run_task_config[:container_overrides].present?
-            container = run_task_config[:container_overrides].find! { |container| container[:name] == override_container }
+            # TODO: Push overriding when container not found?
+            container = run_task_config[:container_overrides].find { |container| container[:name] == override_container } or fail "container #{override_container} not found"
             container[:command] = command
           else
             run_task_config[:container_overrides] = [
