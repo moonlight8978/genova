@@ -23,12 +23,21 @@ module Genova
         run_task_config = @deploy_config.find_run_task(@cluster, run_task)
 
         if override_container.present?
-          run_task_config[:container_overrides] = [
-            {
-              name: override_container,
-              command: override_command.split(' ')
-            }
-          ]
+          command = override_command.split(' ')
+
+          if run_task_config[:container_overrides].present?
+            # TODO: Push overriding when container not found?
+            container = run_task_config[:container_overrides].find { |container| container[:name] == override_container } or fail "container #{override_container} not found"
+            container[:command] = command
+          else
+            run_task_config[:container_overrides] = [
+              {
+                name: override_container,
+                command: command
+              }
+            ]
+          end
+
         end
 
         push_image(run_task_config[:containers], run_task_config[:path], id)
