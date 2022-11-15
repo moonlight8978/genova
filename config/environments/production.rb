@@ -108,5 +108,9 @@ Rails.application.configure do
   logger.formatter = config.log_formatter
   config.logger    = ActiveSupport::TaggedLogging.new(logger)
 
-  config.hosts << URI.parse(Settings.console.url).host
+  config.hosts = [
+    URI.parse(Settings.console.url).host,
+    IPAddr.new('0.0.0.0/0'),
+    'localhost'
+  ]
 end

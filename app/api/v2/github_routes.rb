@@ -13,8 +13,13 @@ module V2
       post :push do
         error! 'Signature is invalid.', 403 unless verify_webhook_signature?(@payload)
 
-        id = Genova::Sidekiq::JobStore.create(parse_webhook_data(@data))
-        Github::DeployWorker.perform_async(id)
+        # Even if the webhook trigger is limited to Push, the deletion of a branch will be notified.
+        # https://github.com/metaps/genova/issues/272
+        error! 'Detect branch deletion.', 403 if @data[:deleted]
+
+        id = "pushed_at:#{@data[:repository][:pushed_at]}"
+        key = Genova::Sidekiq::JobStore.create(id, parse_webhook_data(@data))
+        Github::DeployWorker.perform_async(key)
 
         { result: 'Deploy request was executed.' }
       rescue Genova::Exceptions::InvalidRequestError => e
@@ -27,8 +32,9 @@ module V2
         post :push do
           error! 'Secret key is invalid.', 403 unless verify_actions_secret_key?
 
-          id = Genova::Sidekiq::JobStore.create(parse_actions_data(@data))
-          Github::DeployWorker.perform_async(id)
+          id = "pushed_at:#{@data[:pushed_at]}"
+          key = Genova::Sidekiq::JobStore.create(id, parse_actions_data(@data))
+          Github::DeployWorker.perform_async(key)
 
           { result: 'Deploy request was executed.' }
         rescue Genova::Exceptions::InvalidRequestError => e
