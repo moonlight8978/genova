@@ -23,12 +23,21 @@ module Genova
         run_task_config = @deploy_config.find_run_task(@cluster, run_task)
 
         if override_container.present?
-          run_task_config[:container_overrides] = [
-            {
-              name: override_container,
-              command: override_command.split(' ')
-            }
-          ]
+          command = override_command.split(' ')
+
+          if run_task_config[:container_overrides].present?
+            # TODO: Push overriding when container not found?
+            container = run_task_config[:container_overrides].find { |container| container[:name] == override_container } or fail "container #{override_container} not found"
+            container[:command] = command
+          else
+            run_task_config[:container_overrides] = [
+              {
+                name: override_container,
+                command: command
+              }
+            ]
+          end
+
         end
 
         task_definition_path = @code_manager.task_definition_config_path("config/#{run_task_config[:path]}")
@@ -73,7 +82,8 @@ module Genova
           :force_new_deployment,
           :health_check_grace_period_seconds,
           :minimum_healthy_percent,
-          :maximum_percent
+          :maximum_percent,
+          :enable_execute_command
         )
 
         task_arns = service_client.update(service, task_definition.task_definition_arn, params)
@@ -93,6 +103,28 @@ module Genova
         deploy_response.task_definition_arn = task_definition.task_definition_arn
         deploy_response.task_arns = task_arns
         deploy_response
+      end
+
+      def register_service(service)
+        service_config = @deploy_config.find_service(@cluster, service)
+        task_definition_config = @code_manager.load_task_definition_config(Pathname('config').join(service_config[:path]))
+
+        params = service_config.slice(
+          :force_new_deployment,
+          :health_check_grace_period_seconds,
+          :minimum_healthy_percent,
+          :maximum_percent,
+          :enable_execute_command,
+          :load_balancers,
+          :launch_type,
+          :network_configuration
+        )
+        params.merge!(task_definition: task_definition_config[:family])
+
+        service_client = Deployer::Service::Client.new(@cluster, logger: @logger)
+        raise Exceptions::ValidationError, "Service is already registered. [#{service}]" if service_client.exist?(service)
+
+        service_client.register(service, params)
       end
 
       def deploy_scheduled_task(rule, target, tag)

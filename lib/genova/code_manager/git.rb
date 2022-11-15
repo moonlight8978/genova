@@ -26,6 +26,16 @@ module Git
       end
       arr
     end
+
+    def update_submodules
+      command("-C #{@git_work_dir}", "submodule", "update")
+    end
+  end
+
+  class Base
+    def update_submodules
+      lib.update_submodules
+    end
   end
 end
 
@@ -56,6 +66,8 @@ module Genova
       end
 
       def update
+        FileUtils.rm_rf(@repos_path)
+
         git = client
 
         @logger.info("Git checkout: #{@branch}")
@@ -69,9 +81,10 @@ module Genova
         end
 
         git.fetch
-        git.clean(force: true, d: true)
+        git.clean(ff: true, d: true, force: true)
         git.checkout(checkout)
         git.reset_hard(reset_hard)
+        git.update_submodules
 
         git.log(1).to_s
       end
@@ -162,7 +175,7 @@ module Genova
         uri = Genova::Github::Client.new(@repository).build_clone_uri
         @logger.info("Git clone: #{uri}")
 
-        ::Git.clone(uri, '', path: @repos_path)
+        ::Git.clone(uri, '', path: @repos_path, recursive: true, branch: @branch)
       end
 
       def client

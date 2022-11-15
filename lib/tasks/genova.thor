@@ -176,6 +176,19 @@ module GenovaCli
       puts("Registered task. [#{task.task_definition_arn}]")
     end
 
+    desc 'register-service', 'Register service.'
+    option :branch, default: Settings.github.default_branch, aliases: :b, desc: 'Branch name.'
+    option :service, aliases: :s, desc: "Service name"
+    option :repository, required: true, aliases: :r, desc: 'Repository name.'
+    option :cluster, aliases: :c, desc: "Cluster name"
+    def register_service
+      code_manager = ::Genova::CodeManager::Git.new(options[:repository], branch: options[:branch])
+      code_manager.update
+
+      code_manager.load_deploy_config
+      Genova::Ecs::Client.new(options[:cluster], code_manager).register_service(options[:service])
+    end
+
     desc 'clear-transaction', 'Cancel deploy transactions.'
     option :repository, required: true, aliases: :r, desc: 'Repository name.'
     def clear_transaction

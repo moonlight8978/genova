@@ -18,7 +18,7 @@ module Genova
               task_definition: task_definition_arn
             }
 
-            params.merge(options.slice(:desired_count, :force_new_deployment, :health_check_grace_period_seconds))
+            params.merge!(options.slice(:desired_count, :force_new_deployment, :health_check_grace_period_seconds, :enable_execute_command))
 
             deployment_config = options.slice(:minimum_healthy_percent, :maximum_percent)
             params[:deployment_configuration] = deployment_config if deployment_config.count.positive?
@@ -29,6 +29,14 @@ module Genova
             @logger.info(JSON.pretty_generate(result.to_h))
 
             wait(service, result.service.task_definition)
+          end
+
+          def register(service, options = {})
+            params = options.merge(cluster: @cluster, service_name: service, desired_count: 0)
+            result = @ecs.create_service(params)
+
+            @logger.info('Service has been created.')
+            @logger.info(JSON.pretty_generate(result.to_h))
           end
 
           def exist?(service)
